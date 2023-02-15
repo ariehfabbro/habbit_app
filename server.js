@@ -1,23 +1,21 @@
-const fastify = require('fastify')({
-  logger: true
-})
-const path = require('path')
-const fs = require('fs')
+import fastify from 'fastify';
+import fs from'fs';
 
-const dbPath = path.join(__dirname, 'db.json')
+const api = fastify({ logger: true });
+const dbPath = './database/db.json';
 
-fastify.get('/', (request, reply) => {
+api.get('/', (request, reply) => {
   reply.send({ message: 'Welcome to our CRUD API' })
 })
 
-fastify.get('/items', (request, reply) => {
+api.get('/items', (request, reply) => {
   fs.readFile(dbPath, 'utf8', (err, data) => {
     if (err) return reply.send(err)
     reply.send(JSON.parse(data))
   })
 })
 
-fastify.post('/items', (request, reply) => {
+api.post('/items', (request, reply) => {
   fs.readFile(dbPath, 'utf8', (err, data) => {
     if (err) return reply.send(err)
     let items = JSON.parse(data)
@@ -30,12 +28,12 @@ fastify.post('/items', (request, reply) => {
   })
 })
 
-fastify.put('/items/:id', (request, reply) => {
+api.put('/items/:id', (request, reply) => {
   fs.readFile(dbPath, 'utf8', (err, data) => {
     if (err) return reply.send(err)
     let items = JSON.parse(data)
     items = items.map(item => {
-      if (parseInt(item.id,10) === parseInt(request.params.id,10)) {
+      if (parseInt(item.id, 10) === parseInt(request.params.id, 10)) {
         return { ...item.id, ...request.body }
       }
       return item
@@ -47,10 +45,10 @@ fastify.put('/items/:id', (request, reply) => {
   })
 })
 
-fastify.delete('/items/:id', (request, reply) => {
+api.delete('/items/:id', (request, reply) => {
   fs.readFile(dbPath, 'utf8', (err, data) => {
     if (err) return reply.send(err)
-    const items = JSON.parse(data).filter(item => parseInt(item.id,10) !== parseInt(request.params.id,10))
+    const items = JSON.parse(data).filter(item => parseInt(item.id, 10) !== parseInt(request.params.id, 10))
     fs.writeFile(dbPath, JSON.stringify(items), (err) => {
       if (err) return reply.send(err)
       reply.send({ message: 'Item deleted' })
@@ -60,11 +58,12 @@ fastify.delete('/items/:id', (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen(3000)
-    fastify.log.info(`server listening on ${fastify.server.address().port}`)
+    await api.listen(3000)
+    api.log.info(`server listening on ${api.server.address().port}`)
   } catch (err) {
-    fastify.log.error(err)
+    api.log.error(err)
     process.exit(1)
   }
 }
+
 start()
